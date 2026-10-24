@@ -3,7 +3,7 @@ import type { AiExplanation, ExplainRequest, RoadmapRationaleRequest } from './a
 // ─── Configuration ───────────────────────────────────────────────────
 
 const GROQ_API_KEY = () => process.env.GROQ_API_KEY ?? '';
-const GROQ_MODEL = () => process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
+const GROQ_MODEL = () => process.env.GROQ_MODEL ?? 'qwen/qwen3.8-27b';
 const GROQ_TIMEOUT_MS = 15_000;
 
 export function isGroqConfigured(): boolean {
