@@ -24,4 +24,7 @@ export interface InterpretedPlan {
   timePerSession: TimeOption;
   deadline?: string;
   strugglingTopics?: string[];
+  domainId?: string;
+  domainName?: string;
+  domainStatus?: 'supported' | 'partially_supported' | 'unsupported';
 }

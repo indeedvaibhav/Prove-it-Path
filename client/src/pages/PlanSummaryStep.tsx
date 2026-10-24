@@ -1,13 +1,16 @@
 import React from 'react';
 import { Button } from '../components/Common/Button';
-import { ArrowRightIcon, ClockIcon } from '../components/Common/Icons';
+import { ArrowRightIcon, ClockIcon, AlertIcon } from '../components/Common/Icons';
 import type { InterpretedPlan, TopicPriority } from '../types/onboarding';
+import type { DomainCapability } from '../types/domain';
 
 interface PlanSummaryStepProps {
   plan: InterpretedPlan;
+  domain?: DomainCapability;
   onConfirm: () => void;
   onBack: () => void;
   onEdit: () => void;
+  onSwitchToSupported?: () => void;
 }
 
 const PRIORITY_LABELS: Record<TopicPriority, { text: string; bg: string; color: string; border: string }> = {
@@ -39,10 +42,16 @@ const PRIORITY_LABELS: Record<TopicPriority, { text: string; bg: string; color: 
 
 export const PlanSummaryStep: React.FC<PlanSummaryStepProps> = ({
   plan,
+  domain,
   onConfirm,
   onBack,
-  onEdit
+  onEdit,
+  onSwitchToSupported
 }) => {
+  const domainStatus = domain?.status || plan.domainStatus || 'supported';
+  const domainName = domain?.name || plan.domainName || 'Relational SQL';
+  const isSupported = domainStatus === 'supported';
+  const isUnsupported = domainStatus === 'unsupported';
   return (
     <div style={{ maxWidth: '720px', margin: '0 auto', width: '100%', padding: '3rem 1rem 2rem 1rem' }}>
       {/* Header */}
@@ -125,12 +134,43 @@ export const PlanSummaryStep: React.FC<PlanSummaryStepProps> = ({
             paddingTop: '0.85rem',
             borderTop: '1px solid var(--border-subtle)',
             fontSize: '0.82rem',
-            color: 'var(--text-muted)'
+            color: 'var(--text-muted)',
+            alignItems: 'center'
           }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             <ClockIcon size={13} />
             ~{plan.estimatedMinutes} min session
+          </span>
+          <span>Domain: <strong style={{ color: 'var(--text-main)' }}>{domainName}</strong></span>
+          <span
+            style={{
+              fontSize: '0.7rem',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.04em',
+              padding: '0.1rem 0.45rem',
+              borderRadius: 'var(--radius-sm)',
+              background: isSupported
+                ? 'var(--color-success-bg)'
+                : isUnsupported
+                ? 'var(--color-gap-bg)'
+                : 'var(--color-slip-bg)',
+              color: isSupported
+                ? 'var(--color-success)'
+                : isUnsupported
+                ? 'var(--color-gap)'
+                : 'var(--color-slip)',
+              border: `1px solid ${
+                isSupported
+                  ? 'var(--color-success-border)'
+                  : isUnsupported
+                  ? 'var(--color-gap-border)'
+                  : 'var(--color-slip-border)'
+              }`
+            }}
+          >
+            {isSupported ? 'Supported' : isUnsupported ? 'Unsupported' : 'In Development'}
           </span>
           <span>Level: <strong style={{ color: 'var(--text-main)' }}>{plan.startingLevel}</strong></span>
           {plan.deadline && (
@@ -269,6 +309,45 @@ export const PlanSummaryStep: React.FC<PlanSummaryStepProps> = ({
         The adaptive engine will further calibrate as you practise.
       </div>
 
+      {/* Domain Limitation Callout for Unsupported / Partial Tracks */}
+      {!isSupported && (
+        <div
+          style={{
+            background: isUnsupported ? 'var(--color-gap-bg)' : 'var(--color-slip-bg)',
+            border: `1px solid ${isUnsupported ? 'var(--color-gap-border)' : 'var(--color-slip-border)'}`,
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.25rem',
+            marginBottom: '2rem'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem' }}>
+            <div style={{ color: isUnsupported ? 'var(--color-gap)' : 'var(--color-slip)', marginTop: '0.1rem' }}>
+              <AlertIcon size={18} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, margin: '0 0 0.35rem 0', color: 'var(--text-main)' }}>
+                {isUnsupported
+                  ? `Interactive evaluation unavailable for ${domainName}`
+                  : `Curriculum Preview: Interactive runner in development for ${domainName}`}
+              </h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 0.85rem 0', lineHeight: 1.5 }}>
+                {domain?.limitationReason ||
+                  `Prove-It Path requires executable code evaluation to detect learning mirages and slips. Interactive tasks for "${domainName}" are not available on this instance, and we do not generate fake unverified tasks.`}
+              </p>
+              {onSwitchToSupported && (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={onSwitchToSupported}
+                >
+                  Switch to Relational SQL Practice
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Actions */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -279,14 +358,25 @@ export const PlanSummaryStep: React.FC<PlanSummaryStepProps> = ({
             Edit inputs
           </Button>
         </div>
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={onConfirm}
-          icon={<ArrowRightIcon size={16} />}
-        >
-          Start learning
-        </Button>
+        {isSupported ? (
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={onConfirm}
+            icon={<ArrowRightIcon size={16} />}
+          >
+            Start learning
+          </Button>
+        ) : (
+          <Button
+            variant="secondary"
+            size="lg"
+            disabled={true}
+            title="Interactive workspace cannot be launched without a verified task execution sandbox."
+          >
+            Workspace Unavailable ({domainName})
+          </Button>
+        )}
       </div>
     </div>
   );

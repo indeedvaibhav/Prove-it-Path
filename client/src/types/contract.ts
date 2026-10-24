@@ -89,6 +89,8 @@ export interface PersonalizedGoalContext {
   focusTopics?: string[];
   startingNodeId: string;
   rationale?: string;
+  domain?: string;
+  domainStatus?: 'supported' | 'partially_supported' | 'unsupported';
 }
 
 export interface LearningGoal {

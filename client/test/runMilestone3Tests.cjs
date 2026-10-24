@@ -2,6 +2,7 @@ const assert = require('node:assert');
 const { compareQueryResults, formatCellValue } = require('../dist-test/lib/diffUtils.js');
 const { runMockEvaluation } = require('../dist-test/lib/mockEngine.js');
 const { interpretLearningGoal } = require('../dist-test/lib/goalInterpreter.js');
+const { resolveDomainCapability, KNOWN_DOMAINS } = require('../dist-test/lib/domainRegistry.js');
 const { STARTER_TASK, VARIANT_TASK, INITIAL_ROADMAP_NODES } = require('../dist-test/data/tasks.js');
 
 console.log('--- STARTING MILESTONE 3 VERIFICATION SUITE ---\n');
@@ -322,6 +323,76 @@ async function runAll() {
       assert(t.reason.length > 0, `Topic ${t.nodeId} must have an explanatory reason`);
       assert(['focus', 'core', 'advanced', 'foundation'].includes(t.priority));
     });
+  });
+
+  // ==========================================
+  // SCENARIO GROUP 5: DOMAIN CAPABILITY & SELECTION
+  // ==========================================
+
+  test('5.1 Supported domain resolution (Relational SQL)', () => {
+    const res = resolveDomainCapability('sql');
+    assert.strictEqual(res.capability.id, 'sql');
+    assert.strictEqual(res.capability.status, 'supported');
+    assert.strictEqual(res.capability.hasExecutionEngine, true);
+    assert.strictEqual(res.backendCapabilityApiReady, false, 'Temporary client state documented');
+    assert.strictEqual(res.source, 'client_registry');
+  });
+
+  test('5.2 SQL alias matching (PostgreSQL, SQLite, database)', () => {
+    const postgresRes = resolveDomainCapability('PostgreSQL queries');
+    const sqliteRes = resolveDomainCapability('sqlite basics');
+    const dbRes = resolveDomainCapability('relational database');
+
+    assert.strictEqual(postgresRes.capability.id, 'sql');
+    assert.strictEqual(sqliteRes.capability.id, 'sql');
+    assert.strictEqual(dbRes.capability.id, 'sql');
+  });
+
+  test('5.3 Partially supported domains (Regex & Git)', () => {
+    const regexRes = resolveDomainCapability('regex');
+    assert.strictEqual(regexRes.capability.id, 'regex');
+    assert.strictEqual(regexRes.capability.status, 'partially_supported');
+    assert.strictEqual(regexRes.capability.hasExecutionEngine, false, 'Regex engine must be marked as not ready');
+    assert(regexRes.capability.limitationReason.length > 0);
+
+    const gitRes = resolveDomainCapability('git');
+    assert.strictEqual(gitRes.capability.id, 'git');
+    assert.strictEqual(gitRes.capability.status, 'partially_supported');
+    assert.strictEqual(gitRes.capability.hasExecutionEngine, false);
+  });
+
+  test('5.4 Unsupported / custom domain suggestions (Docker, Rust)', () => {
+    const dockerRes = resolveDomainCapability('Docker & Container Orchestration');
+    assert.strictEqual(dockerRes.capability.status, 'unsupported');
+    assert.strictEqual(dockerRes.capability.hasExecutionEngine, false);
+    assert(dockerRes.capability.limitationReason.includes('Docker'), 'Explains limitation specifically for Docker');
+    assert.strictEqual(dockerRes.capability.recommendedAlternativeId, 'sql');
+
+    const rustRes = resolveDomainCapability('Rust Concurrency');
+    assert.strictEqual(rustRes.capability.status, 'unsupported');
+    assert.strictEqual(rustRes.capability.hasExecutionEngine, false);
+  });
+
+  test('5.5 Capability API readiness flag & disclaimer', () => {
+    const res = resolveDomainCapability('sql');
+    assert.strictEqual(res.backendCapabilityApiReady, false);
+    assert(res.disclaimer.includes('/api/capabilities'), 'Documents backend integration dependency');
+  });
+
+  test('5.6 Domain-aware goal interpretation retains domain status', () => {
+    const customPlan = interpretLearningGoal({
+      rawGoalText: 'Master container deployment',
+      experienceLevel: 'beginner',
+      timePerSession: 30,
+      domainId: 'custom-docker',
+      domainName: 'Docker & Containers',
+      domainStatus: 'unsupported'
+    });
+
+    assert.strictEqual(customPlan.domainStatus, 'unsupported');
+    assert.strictEqual(customPlan.domainName, 'Docker & Containers');
+    assert(customPlan.title.includes('Docker & Containers'), 'Plan title reflects domain');
+    assert(customPlan.summary.includes('Live code execution is not available'), 'Explains real execution limitation');
   });
 
   console.log(`\n--- ALL ${passedTests} TESTS PASSED SUCCESSFULLY! ---`);

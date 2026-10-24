@@ -12,12 +12,16 @@ const GOAL_CHIPS = [
 
 interface GoalInputStepProps {
   initialGoalText: string;
+  domainName?: string;
   onContinue: (goalText: string) => void;
+  onBack?: () => void;
 }
 
 export const GoalInputStep: React.FC<GoalInputStepProps> = ({
   initialGoalText,
-  onContinue
+  domainName = 'Relational SQL',
+  onContinue,
+  onBack
 }) => {
   const [goalText, setGoalText] = useState(initialGoalText);
 
@@ -39,19 +43,47 @@ export const GoalInputStep: React.FC<GoalInputStepProps> = ({
     <div style={{ maxWidth: '720px', margin: '0 auto', width: '100%', padding: '3rem 1rem 2rem 1rem' }}>
       {/* Masthead */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <span
-          style={{
-            fontSize: '0.7rem',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-            color: 'var(--text-subtle)',
-            fontWeight: 700,
-            display: 'block',
-            marginBottom: '0.6rem'
-          }}
-        >
-          Prove-It Path
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.6rem' }}>
+          <span
+            style={{
+              fontSize: '0.7rem',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              color: 'var(--text-subtle)',
+              fontWeight: 700
+            }}
+          >
+            Prove-It Path
+          </span>
+          <span style={{ color: 'var(--border-light)' }}>•</span>
+          <span
+            style={{
+              fontSize: '0.75rem',
+              fontWeight: 600,
+              background: 'var(--bg-surface-subtle)',
+              border: '1px solid var(--border-light)',
+              padding: '0.15rem 0.5rem',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--text-main)'
+            }}
+          >
+            {domainName}
+          </span>
+          {onBack && (
+            <button
+              type="button"
+              onClick={onBack}
+              style={{
+                fontSize: '0.75rem',
+                color: 'var(--text-muted)',
+                textDecoration: 'underline',
+                cursor: 'pointer'
+              }}
+            >
+              Change
+            </button>
+          )}
+        </div>
         <h1
           style={{
             fontSize: '2.35rem',
@@ -174,7 +206,12 @@ export const GoalInputStep: React.FC<GoalInputStepProps> = ({
       </div>
 
       {/* Continue Action */}
-      <div style={{ textAlign: 'center' }}>
+      <div style={{ display: 'flex', justifyContent: onBack ? 'space-between' : 'center', alignItems: 'center' }}>
+        {onBack && (
+          <Button variant="ghost" size="md" onClick={onBack}>
+            ← Back to domains
+          </Button>
+        )}
         <Button
           variant="primary"
           size="lg"

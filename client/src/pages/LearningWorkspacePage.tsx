@@ -165,6 +165,7 @@ export const LearningWorkspacePage: React.FC<LearningWorkspacePageProps> = ({
           <div>
             <strong style={{ color: 'var(--text-main)' }}>Custom Plan: </strong>
             <span>
+              {goal.personalizedContext.domain ? `${goal.personalizedContext.domain.toUpperCase()} • ` : ''}
               Calibrated for {goal.personalizedContext.experienceLevel.replace('_', ' ')}
               {goal.personalizedContext.focusTopics && goal.personalizedContext.focusTopics.length > 0 &&
                 ` • Focusing on ${goal.personalizedContext.focusTopics.map((t) => t.toUpperCase()).join(', ')}`}

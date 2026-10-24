@@ -11,6 +11,9 @@ export interface GoalInterpreterInput {
   timePerSession: TimeOption;
   deadline?: string;
   strugglingTopics?: string[];
+  domainId?: string;
+  domainName?: string;
+  domainStatus?: 'supported' | 'partially_supported' | 'unsupported';
 }
 
 const TOPIC_METADATA = [
@@ -53,7 +56,13 @@ export function interpretLearningGoal(input: GoalInterpreterInput): InterpretedP
   let title = 'Mastery-Driven SQL Pathway';
   let summary = 'A calibrated sequence through essential SQL query patterns with continuous confidence calibration.';
 
-  if (text.includes('interview') || text.includes('screen') || text.includes('hiring') || text.includes('job') || text.includes('prep') || text.includes('leetcode')) {
+  if (input.domainStatus === 'unsupported') {
+    title = `${input.domainName || 'Custom Field'} (Curriculum Preview)`;
+    summary = `Exploratory conceptual pathway for ${input.domainName || 'this field'}. Live code execution is not available on this instance; Relational SQL is recommended for hands-on practice.`;
+  } else if (input.domainStatus === 'partially_supported') {
+    title = `${input.domainName || 'Specialized Track'} (In Development)`;
+    summary = `Curriculum blueprint for ${input.domainName || 'this field'}. Interactive test harness is in development; switch to SQL for verified actual-vs-expected execution.`;
+  } else if (text.includes('interview') || text.includes('screen') || text.includes('hiring') || text.includes('job') || text.includes('prep') || text.includes('leetcode')) {
     title = 'Technical Interview Preparation';
     summary = 'Targeted query practice under realistic constraints with a focus on projection accuracy, filtering logic, and table joins.';
   } else if (text.includes('work') || text.includes('analytic') || text.includes('business') || text.includes('dashboard') || text.includes('metric') || text.includes('report') || text.includes('data')) {
@@ -138,6 +147,9 @@ export function interpretLearningGoal(input: GoalInterpreterInput): InterpretedP
     experienceLevel: input.experienceLevel,
     timePerSession: input.timePerSession,
     deadline: input.deadline,
-    strugglingTopics: Array.from(struggles)
+    strugglingTopics: Array.from(struggles),
+    domainId: input.domainId,
+    domainName: input.domainName,
+    domainStatus: input.domainStatus
   };
 }

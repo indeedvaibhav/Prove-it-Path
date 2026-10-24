@@ -15,8 +15,10 @@
     "src/lib/diffUtils.ts",
     "src/lib/mockEngine.ts",
     "src/lib/goalInterpreter.ts",
+    "src/lib/domainRegistry.ts",
     "src/data/tasks.ts",
     "src/types/contract.ts",
-    "src/types/onboarding.ts"
+    "src/types/onboarding.ts",
+    "src/types/domain.ts"
   ]
 }
