@@ -9,14 +9,20 @@ import { errorHandler } from './middleware/error-handler.js';
 import { getActiveAiProvider } from './services/ai-provider.js';
 
 const PORT = parseInt(process.env.PORT ?? '3001', 10);
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN ?? 'http://localhost:5173';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN;
 
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────
 
+const corsOrigin = !CLIENT_ORIGIN || CLIENT_ORIGIN === '*'
+  ? true
+  : CLIENT_ORIGIN.includes(',')
+    ? CLIENT_ORIGIN.split(',').map((o) => o.trim())
+    : CLIENT_ORIGIN;
+
 app.use(cors({
-  origin: CLIENT_ORIGIN,
+  origin: corsOrigin,
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type'],
 }));
@@ -40,7 +46,7 @@ if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     const provider = getActiveAiProvider();
     console.log(`[server] Prove-it-Path API listening on http://localhost:${PORT}`);
-    console.log(`[server] CORS origin: ${CLIENT_ORIGIN}`);
+    console.log(`[server] CORS origin: ${CLIENT_ORIGIN || '*'}`);
     console.log(`[server] AI provider: ${provider !== 'none' ? provider.toUpperCase() + ' (configured)' : 'Template fallback (no API key configured)'}`);
   });
 }
