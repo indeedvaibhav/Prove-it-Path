@@ -117,6 +117,66 @@ export const apiClient = {
       source: data.source === 'ai' ? 'ai' : 'template',
       fallbackUsed: Boolean(data.fallbackUsed || data.source === 'template')
     };
+  },
+
+  /**
+   * Fetch backend domain capabilities if server is active.
+   */
+  async getCapabilities(): Promise<{ domains: any[]; activeExecutionDomainId: string; backendCapabilityApiReady: boolean; disclaimer: string }> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/capabilities`);
+    if (!res.ok) {
+      throw new ApiError(`Capabilities fetch failed with status ${res.status}`, { status: res.status });
+    }
+    return res.json();
+  },
+
+  /**
+   * Resolve a domain or custom query against backend capability registry.
+   */
+  async resolveCapability(domainInput: string): Promise<any> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/capabilities/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ domainInput })
+    });
+    if (!res.ok) {
+      throw new ApiError(`Capability resolution failed with status ${res.status}`, { status: res.status });
+    }
+    return res.json();
+  },
+
+  /**
+   * Interpret a user's free-text goal using backend goal service.
+   */
+  async interpretGoal(payload: {
+    rawGoalText: string;
+    experienceLevel?: string;
+    timePerSession?: number;
+    deadline?: string;
+    strugglingTopics?: string[];
+    explicitDomainId?: string;
+  }): Promise<any> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/goal/interpret`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      throw new ApiError(`Goal interpretation failed with status ${res.status}`, { status: res.status });
+    }
+    return res.json();
+  },
+
+  /**
+   * Initialize a learning session from confirmed plan.
+   */
+  async startSession(payload: any): Promise<any> {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/session`, {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      throw new ApiError(`Session initialization failed with status ${res.status}`, { status: res.status });
+    }
+    return res.json();
   }
 };
 

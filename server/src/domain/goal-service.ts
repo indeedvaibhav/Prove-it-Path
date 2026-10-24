@@ -1,4 +1,4 @@
-import { resolveDomainFromRequest, DOMAIN_REGISTRY, DomainSupportStatus } from './registry.js';
+import { resolveDomainCapability, DomainCapability, DomainSupportStatus } from './registry.js';
 
 export type ExperienceLevel = 'beginner' | 'some_experience' | 'comfortable';
 export type TimeOption = 15 | 30 | 45 | 60;
@@ -63,19 +63,20 @@ export function interpretGoal(req: GoalInterpretationRequest): GoalInterpretatio
   const timePerSession = req.timePerSession || 45;
   const struggles = new Set(req.strugglingTopics || []);
 
-  const resolution = resolveDomainFromRequest(rawText, req.explicitDomainId);
+  const resolution = resolveDomainCapability(req.explicitDomainId || rawText);
+  const domain = resolution.capability;
 
   // 1. Case: Unsupported domain
-  if (!resolution.domain || resolution.domain.supportStatus === 'unsupported') {
-    const domainName = resolution.domain?.displayName ?? (rawText.trim() ? `"${rawText.trim()}"` : 'your requested topic');
+  if (domain.status === 'unsupported') {
+    const domainName = domain.name || (rawText.trim() ? `"${rawText.trim()}"` : 'your requested topic');
     return {
       supportStatus: 'unsupported',
-      domainId: resolution.domain?.id ?? 'custom_unsupported',
+      domainId: domain.id,
       domainDisplayName: domainName,
       plan: null,
       message: `The domain ${domainName} is not yet available with a real interactive curriculum and evaluator. We have recorded your interest! In the meantime, would you like to explore our fully supported SQL learning path?`,
       supportedAlternative: 'sql',
-      knownLimitations: resolution.domain?.knownLimitations ?? ['No interactive evaluator currently available for this domain.'],
+      knownLimitations: domain.limitationReason ? [domain.limitationReason] : ['No interactive evaluator currently available for this domain.'],
     };
   }
 
@@ -175,16 +176,16 @@ export function interpretGoal(req: GoalInterpretationRequest): GoalInterpretatio
     strugglingTopics: Array.from(struggles),
   };
 
-  const isPartial = resolution.domain.supportStatus === 'partially_supported';
+  const isPartial = domain.status === 'partially_supported';
 
   return {
-    supportStatus: resolution.domain.supportStatus,
-    domainId: resolution.domain.id,
-    domainDisplayName: resolution.domain.displayName,
+    supportStatus: domain.status,
+    domainId: domain.id,
+    domainDisplayName: domain.name,
     plan,
     message: isPartial
-      ? `We support the relational database and SQL queries required for ${resolution.domain.displayName}. You can begin practicing with our real SQL engine!`
+      ? `We support the relational database and SQL queries required for ${domain.name}. You can begin practicing with our real SQL engine!`
       : undefined,
-    knownLimitations: resolution.domain.knownLimitations,
+    knownLimitations: domain.limitationReason ? [domain.limitationReason] : undefined,
   };
 }

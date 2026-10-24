@@ -1,25 +1,34 @@
 import { Router } from 'express';
 import type { Request, Response } from 'express';
-import { DOMAIN_REGISTRY } from '../domain/registry.js';
+import { DOMAIN_REGISTRY, resolveDomainCapability, BACKEND_CAPABILITY_DISCLAIMER } from '../domain/registry.js';
 import { interpretGoal } from '../domain/goal-service.js';
 import { SERVER_TASKS } from '../engine/sql-engine.js';
 
 export const sessionRouter = Router();
 
+// ─── GET /api/capabilities ───────────────────────────────────────────
+
+sessionRouter.get('/capabilities', (_req: Request, res: Response) => {
+  res.json({
+    domains: Object.values(DOMAIN_REGISTRY),
+    activeExecutionDomainId: 'sql',
+    backendCapabilityApiReady: true,
+    disclaimer: BACKEND_CAPABILITY_DISCLAIMER,
+  });
+});
+
+// ─── POST /api/capabilities/resolve ──────────────────────────────────
+
+sessionRouter.post('/capabilities/resolve', (req: Request, res: Response) => {
+  const { domainInput } = req.body;
+  const result = resolveDomainCapability(domainInput ?? '');
+  res.json(result);
+});
+
 // ─── GET /api/domains ────────────────────────────────────────────────
 
 sessionRouter.get('/domains', (_req: Request, res: Response) => {
-  const domains = Object.values(DOMAIN_REGISTRY).map((d) => ({
-    id: d.id,
-    displayName: d.displayName,
-    description: d.description,
-    supportStatus: d.supportStatus,
-    maturity: d.maturity,
-    hasRoadmapGeneration: d.hasRoadmapGeneration,
-    knownLimitations: d.knownLimitations,
-  }));
-
-  res.json({ domains });
+  res.json({ domains: Object.values(DOMAIN_REGISTRY) });
 });
 
 // ─── POST /api/goal/interpret ────────────────────────────────────────

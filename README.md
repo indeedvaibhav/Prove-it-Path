@@ -106,7 +106,19 @@ Returns grounded explanations. When an AI API key is configured, uses live LLM i
 ### 3. `POST /api/goal`
 Initializes curriculum roadmap and current starter task.
 
-### 4. `GET /api/health`
+### 4. `GET /api/capabilities`
+Returns registered domains, active execution domain (`sql`), and capability metadata matching `DomainCapabilityResult`.
+
+### 5. `POST /api/capabilities/resolve`
+Resolves domain capability for user-selected or free-text domain inputs, returning capability tier (`supported`, `partially_supported`, `unsupported`), limitation reasons, and alternative suggestions.
+
+### 6. `POST /api/goal/interpret`
+Interprets user free-text goal, experience level, and session constraints, generating a personalized 5-topic curriculum plan.
+
+### 7. `POST /api/session`
+Initializes or restores an active learning session from a confirmed personalized roadmap.
+
+### 8. `GET /api/health`
 Health probe returning service status, active AI provider, and timestamp.
 
 ---
