@@ -18,7 +18,7 @@ const app = express();
 const corsOrigin = !CLIENT_ORIGIN || CLIENT_ORIGIN === '*'
   ? true
   : CLIENT_ORIGIN.includes(',')
-    ? CLIENT_ORIGIN.split(',').map((o) => o.trim())
+    ? CLIENT_ORIGIN.split(',').map((o: string) => o.trim())
     : CLIENT_ORIGIN;
 
 app.use(cors({
